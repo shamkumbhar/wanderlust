@@ -1,55 +1,31 @@
 version: '3.8'
-
 services:
-  frontend:
-    image: my-frontend-app:latest  # Replace with your frontend image
-    container_name: frontend
-    build:
-      context: ./frontend  # Path to your frontend project
-      dockerfile: Dockerfile
+  mongodb:
+   container_name: mongo
+   volumes:
+    - ./backend/data:/data
     ports:
-      - "3000:3000"  # Change port if using Angular (default: 4200)
-    depends_on:	
-      - backend
-    networks:
-      - app-network
+    - "27017:27017"
 
-  backend:
-    image: my-backend-app:latest  # Replace with your Spring Boot image
+   backend:
     container_name: backend
-    build:
-      context: ./backend  # Path to your backend project
-      dockerfile: Dockerfile
-    environment:
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/mydatabase
-      - SPRING_DATASOURCE_USERNAME=myuser
-      - SPRING_DATASOURCE_PASSWORD=mypassword
-      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
-    ports:
-      - "8080:8080"
-    depends_on:
-      - db
-    networks:
-      - app-network
+    build: ./backend
+    env_files: 
+     - ./backend/.ev.sample
+     ports:
+     - "5000:5000"
+     depends_on:	
+      - mongodb
 
-  db:
-    image: postgres:15  # Use the latest stable PostgreSQL version
-    container_name: database
-    restart: always
-    environment:
-      POSTGRES_DB: mydatabase
-      POSTGRES_USER: myuser
-      POSTGRES_PASSWORD: mypassword
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
-    networks:
-      - app-network
-
-networks:
-  app-network:
-    driver: bridge
+    frotend:
+     container_name: frontend
+     build: ./frontend
+     env_files: 
+      - ./backend/.ev.sample
+      ports:
+      - "5173:5173"
+      depends_on:	
+       - mongodb
 
 volumes:
-  postgres_data:
+  data:
